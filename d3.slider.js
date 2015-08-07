@@ -51,9 +51,12 @@ return function module() {
   function slider(selection) {
     selection.each(function() {
 
+      sliderLength = orientation === "horizontal" ? parseInt(div.style("width"), 10) : parseInt(div.style("height"), 10);
+
       // Create scale if not defined by user
       if (!scale) {
         scale = d3.scale.linear().domain([min, max]);
+        scale.ticks ? scale.range([0, sliderLength]) : scale.rangePoints([0, sliderLength], 0.5);
       }
 
       // Start value
@@ -101,21 +104,19 @@ return function module() {
         if (toType(value) == "array" && value.length == 2) {
           divRange = d3.select(this).append('div').classed("d3-slider-range", true);
 
-          handle1.style("left", formatPercent(scale(value[ 0 ])));
-          divRange.style("left", formatPercent(scale(value[ 0 ])));
+          handle1.style("left", formatPercent(scale(value[ 0 ])/sliderLength));
+          divRange.style("left", formatPercent(scale(value[ 0 ])/sliderLength));
           drag.on("drag", onDragHorizontal);
 
-          var width = 100 - parseFloat(formatPercent(scale(value[ 1 ])));
-          handle2.style("left", formatPercent(scale(value[ 1 ])));
+          var width = 100 - parseFloat(formatPercent(scale(value[ 1 ])/sliderLength));
+          handle2.style("left", formatPercent(scale(value[ 1 ])/sliderLength));
           divRange.style("right", width+"%");
           drag.on("drag", onDragHorizontal);
 
         } else {
-          handle1.style("left", formatPercent(scale(value)));
+          handle1.style("left", formatPercent(scale(value)/sliderLength));
           drag.on("drag", onDragHorizontal);
         }
-        
-        sliderLength = parseInt(div.style("width"), 10);
 
       } else { // Vertical
 
@@ -124,21 +125,19 @@ return function module() {
         if (toType(value) == "array" && value.length == 2) {
           divRange = d3.select(this).append('div').classed("d3-slider-range-vertical", true);
 
-          handle1.style("bottom", formatPercent(scale(value[ 0 ])));
-          divRange.style("bottom", formatPercent(scale(value[ 0 ])));
+          handle1.style("bottom", formatPercent(scale(value[ 0 ])/sliderLength));
+          divRange.style("bottom", formatPercent(scale(value[ 0 ])/sliderLength));
           drag.on("drag", onDragVertical);
 
-          var top = 100 - parseFloat(formatPercent(scale(value[ 1 ])));
-          handle2.style("bottom", formatPercent(scale(value[ 1 ])));
+          var top = 100 - parseFloat(formatPercent(scale(value[ 1 ])/sliderLength));
+          handle2.style("bottom", formatPercent(scale(value[ 1 ])/sliderLength));
           divRange.style("top", top+"%");
           drag.on("drag", onDragVertical);
 
         } else {
-          handle1.style("bottom", formatPercent(scale(value)));
+          handle1.style("bottom", formatPercent(scale(value)/sliderLength));
           drag.on("drag", onDragVertical);
         }
-        
-        sliderLength = parseInt(div.style("height"), 10);
 
       }
       
@@ -160,9 +159,9 @@ return function module() {
         }
 
         // Copy slider scale to move from percentages to pixels
-        var rangeArray = scale.range()[scale.range().length - 1] !== sliderLength ? [0, sliderLength] : scale.range();
-        axisScale = scale.ticks ? scale.copy().range(rangeArray) : scale.copy().rangePoints(rangeArray, 0.5);
-        axis.scale(axisScale);
+        // var rangeArray = scale.range()[scale.range().length - 1] !== sliderLength ? [0, sliderLength] : scale.range();
+        // axisScale = scale.ticks ? scale.copy().range(rangeArray) : scale.copy().rangePoints(rangeArray, 0.5);
+        axis.scale(scale);
 
           // Create SVG axis container
         var svg = dom.append("svg")
@@ -214,8 +213,8 @@ return function module() {
         if (toType(value) != "array") {
           var pos = Math.max(0, Math.min(sliderLength, d3.event.offsetX || d3.event.layerX));
           moveHandle(scale.invert ? 
-                      stepValue(scale.invert(pos / sliderLength))
-                    : nearestTick(pos / sliderLength));
+                      stepValue(scale.invert(pos)) //TODO scale expecting a percent? wut
+                    : nearestTick(pos));
         }
       }
 
@@ -223,8 +222,8 @@ return function module() {
         if (toType(value) != "array") {
           var pos = sliderLength - Math.max(0, Math.min(sliderLength, d3.event.offsetY || d3.event.layerY));
           moveHandle(scale.invert ? 
-                      stepValue(scale.invert(pos / sliderLength))
-                    : nearestTick(pos / sliderLength));
+                      stepValue(scale.invert(pos))
+                    : nearestTick(pos));
         }
       }
 
@@ -236,8 +235,8 @@ return function module() {
         }
         var pos = Math.max(0, Math.min(sliderLength, d3.event.x));
         moveHandle(scale.invert ? 
-                    stepValue(scale.invert(pos / sliderLength))
-                  : nearestTick(pos / sliderLength));
+                    stepValue(scale.invert(pos))
+                  : nearestTick(pos));
       }
 
       function onDragVertical() {
@@ -248,8 +247,8 @@ return function module() {
         }
         var pos = sliderLength - Math.max(0, Math.min(sliderLength, d3.event.y))
         moveHandle(scale.invert ? 
-                    stepValue(scale.invert(pos / sliderLength))
-                  : nearestTick(pos / sliderLength));
+                    stepValue(scale.invert(pos))
+                  : nearestTick(pos));
       }
 
       function stopPropagation() {
