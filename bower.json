@@ -13,5 +13,6 @@
     "turban",
     "megankanne"
   ],
-  "license": "BSD"
+  "license": "BSD",
+  "ignore": []
 }
